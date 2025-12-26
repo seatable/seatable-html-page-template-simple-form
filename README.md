@@ -38,9 +38,9 @@ Required fields:
 
 ## Build page
 
-1. Update the version in `info.json`.
+1. Update the version in `info.json`
 
-2. Run the following command to build the page.
+2. Run the following command to build the page
 
 ```bash
 node node scripts/build-page.js
