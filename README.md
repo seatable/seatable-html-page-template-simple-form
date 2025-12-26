@@ -35,3 +35,13 @@ Required fields:
 | Name        | Type | Description         |
 | ----------- | ---- | ------------------- |
 | Order_items | link | link to Order_items |
+
+## Build page
+
+1. Update the version in `info.json`.
+
+2. Run the following command to build the page.
+
+```bash
+node node scripts/build-page.js
+```
