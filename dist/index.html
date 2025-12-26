@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Order Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(102, 126, 234, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .container.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .product-section {
+            margin-bottom: 30px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .product-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .product-card.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .product-price {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .product-card.selected .quantity-control {
+            opacity: 1;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .qty-btn:hover {
+            background: #5568d3;
+        }
+
+        .qty-btn:active {
+            transform: scale(0.95);
+        }
+
+        .qty-input {
+            width: 60px;
+            height: 32px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .order-summary {
+            background: #f8f9ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .summary-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .item-qty {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .item-name {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .item-price {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 3px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-label {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .total-amount {
+            font-size: 2em;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .order-actions {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .btn.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn.secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .error-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .error-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .error-overlay.show .error-modal {
+            transform: scale(1);
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            animation: errorShake 0.5s ease;
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: #666;
+            font-size: 1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .error-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .error-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .error-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .error-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .error-btn.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .error-btn.secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .error-btn:active {
+            transform: scale(0.95);
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .success-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-content {
+            text-align: center;
+        }
+
+        .success-icon-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 30px;
+        }
+
+        .success-icon {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: successPop 0.5s ease;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success-checkmark {
+            width: 80px;
+            height: 80px;
+            animation: checkmarkDraw 0.5s ease 0.3s forwards;
+            opacity: 0;
+        }
+
+        .success-checkmark svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .checkmark-path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawCheck 0.5s ease 0.3s forwards;
+        }
+
+        @keyframes checkmarkDraw {
+            to { opacity: 1; }
+        }
+
+        @keyframes drawCheck {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .success-message {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.8;
+            color: #6b7280;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.5s ease 0.5s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-btn {
+            padding: 16px 50px;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+            animation: fadeInUp 0.5s ease 0.7s backwards;
+        }
+
+        .success-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(249, 115, 22, 0.4);
+        }
+
+        .success-btn:active {
+            transform: translateY(0);
+        }
+
+        .empty-order-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #ff6b6b;
+            color: #fff;
+            padding: 16px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+            z-index: 10001;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .empty-order-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .empty-order-toast::before {
+            content: '⚠️';
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    <div class="error-overlay" id="errorOverlay">
+        <div class="error-modal">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title" id="errorTitle">Loading Failed</div>
+            <div class="error-message" id="errorMessage">Load Products failed. Please check your connection and try again.</div>
+            <div class="error-buttons">
+                <button class="error-btn primary" onclick="retryLoading()">Retry</button>
+                <button class="error-btn secondary" onclick="closeError()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-content">
+            <div class="success-icon-wrapper">
+                <div class="success-icon">
+                    <div class="success-checkmark">
+                        <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+                            <path class="checkmark-path" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M14 27l8 8 16-16"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="success-message">Your order has been submitted!</div>
+            <button class="success-btn" onclick="orderAgain()">Order again</button>
+        </div>
+    </div>
+    <div class="empty-order-toast" id="emptyOrderToast">Please select products first!</div>
+    <div class="container" id="mainContainer">
+        <h1>🛍️ Product Order Calculator</h1>
+        <p class="subtitle">Select products and quantities to calculate your total</p>
+
+        <div class="product-section">
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+
+        <div class="order-summary">
+            <div class="summary-title">Order summary</div>
+            <div id="orderItems"></div>
+            <div class="total-section">
+                <span class="total-label">Total:</span>
+                <span class="total-amount" id="totalAmount"></span>
+            </div>
+            <div class="order-actions">
+                <button class="btn secondary" onclick="clearOrder()">Clear order</button>
+                <button class="btn primary" onclick="submitOrder()">Submit order</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/seatable-html-page-sdk@0.0.1/dist/index.js"></script>
+    <script>
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('mainContainer').classList.add('loaded');
+        }
+
+        function showError(title, message) {
+            const errorOverlay = document.getElementById('errorOverlay');
+            const errorTitle = document.getElementById('errorTitle');
+            const errorMessage = document.getElementById('errorMessage');
+            if (title) {
+                errorTitle.textContent = title;
+            }
+            if (message) {
+                errorMessage.textContent = message;
+            }
+            errorOverlay.classList.add('show');
+        }
+
+        function closeError() {
+            document.getElementById('errorOverlay').classList.remove('show');
+        }
+
+        function retryLoading() {
+            closeError();
+            init();
+        }
+
+        function showSuccess() {
+            document.getElementById('successOverlay').classList.add('show');
+        }
+
+        function orderAgain() {
+            document.getElementById('successOverlay').classList.remove('show');
+            clearOrder();
+        }
+
+        function showEmptyOrderToast() {
+            const toast = document.getElementById('emptyOrderToast');
+            toast.classList.add('show');
+
+            // auto hide
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        const NO_PERMISSION_ERR_MSG = 'Permission denied';
+        const MISSING_REQUIRED_FIELDS_ERR_MSG = 'Missing required fields';
+        const TABLE_NAME_MAP = {
+            PRODUCTS: 'Products',
+            ORDER_ITEMS: 'Order_items',
+            ORDERS: 'Orders',
+        };
+        let sdk = null;
+        let productNameColumn = null;
+        let productUnitPriceColumn = null;
+        let productsRows = [];
+        let order = {}; // order items state
+
+        function getColumnByName(columnName, columns) {
+            if (!Array.isArray(columns) || !columnName) return null;
+            return columns.find(function (column) { return column.name ===  columnName})
+        }
+
+        function getProductId(product) {
+            return product?._id;
+        }
+
+        function getProductName(product) {
+            return product?.[productNameColumn?.key] || '';
+        }
+
+        function getProductUnitPrice(product) {
+            return product?.[productUnitPriceColumn?.key] || 0;
+        }
+
+        function getNumberDisplayString(number, formats) {
+            const type = Object.prototype.toString.call(number);
+            if (type !== '[object Number]') {
+                // return formula internal errors directly.
+                if (type === '[object String]' && number.startsWith('#')) {
+                return number;
+                }
+                return '';
+            }
+
+            if (isNaN(number) || number === Infinity || number === -Infinity) return String(number);
+
+            // formats: old version maybe 'null'
+            const { decimal = 'dot', thousands = 'no', precision = 2, enable_precision = false } = formats || {};
+            const sNum = number.toFixed(enable_precision ? precision : 8)
+            const { format = DEFAULT_NUMBER_FORMAT } = formats || {};
+            switch (format) {
+                case 'yuan': {
+                    return `￥${sNum}`;
+                }
+                case 'dollar': {
+                    return `$${sNum}`;
+                }
+                case 'euro': {
+                    return `€${sNum}`;
+                }
+                case 'custom_currency': {
+                    if (formats.currency_symbol_position === 'after') {
+                        return `${sNum}${formats.currency_symbol || ''}`;
+                    }
+                    return `${formats.currency_symbol || ''}${sNum}`;
+                }
+                default: {
+                    return sNum;
+                }
+            }
+        }
+
+        // Render product cards
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            if (productsRows.length === 0) {
+                grid.innerHTML = 'No products';
+            } else {
+                grid.innerHTML = productsRows.map(function(product) {
+                    const productId= getProductId(product);
+                    return (`
+                        <div class="product-card" id="card-${productId}" onclick="toggleProduct('${productId}')">
+                            <div class="product-name">${getProductName(product)}</div>
+                            <div class="product-price">${getNumberDisplayString(getProductUnitPrice(product), productUnitPriceColumn?.data)}</div>
+                            <div class="quantity-control">
+                                <button class="qty-btn" onclick="event.stopPropagation(); changeQuantity('${productId}', -1)">−</button>
+                                <input type="number" class="qty-input" id="qty-${productId}" value="0" min="0" onchange="updateQuantity('${productId}', this.value)" onclick="event.stopPropagation()">
+                                <button class="qty-btn" onclick="event.stopPropagation(); changeQuantity('${productId}', 1)">+</button>
+                            </div>
+                        </div>
+                    `)
+                }).join('');
+            }
+        }
+
+
+        async function init() {
+            showLoading();
+            sdk = new HTMLPageSDK({
+                /**
+                 * local develop settings
+                 * */
+                // server: 'http://127.0.0.1/html-page/',
+                // appUuid: 'def4cb5d-0557-4f3f-b9cc-02626a16dff3',
+                // accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY4OTE5MDgsImFwcF91dWlkIjoiZGVmNGNiNWQtMDU1Ny00ZjNmLWI5Y2MtMDI2MjZhMTZkZmYzIiwidXNlcm5hbWUiOiI3MzAyZDEyZDhlNWQ0NGE1OGUyZWFiMmQ1NTJhYTQyOUBhdXRoLmxvY2FsIiwidXNlcl9yb2xlX25hbWUiOiJhZG1pbiIsInJvbGVfaWQiOjQ2LCJwZXJtaXNzaW9uIjoicnciLCJjdXN0b21fcGVybWlzc2lvbiI6IiJ9.EJKZ6U-xQxL53ukKmNKn2zxOWiBBU0HC4p50zGVSk0M',
+                // pageId: 'bNi0',
+            });
+            await sdk.init()
+            sdk.listRows({ tableName: TABLE_NAME_MAP.PRODUCTS }).then(function (res) {
+                const productsColumns = res.data && res.data.metadata ? res.data && res.data.metadata : [];
+                productsRows = res.data && res.data.results ? res.data && res.data.results : [];
+                productNameColumn = getColumnByName('Product_name', productsColumns);
+                productUnitPriceColumn =getColumnByName('Unit_price', productsColumns);
+                if (!productNameColumn || !productUnitPriceColumn) {
+                    showError(null, MISSING_REQUIRED_FIELDS_ERR_MSG);
+                    return;
+                }
+                renderProducts();
+                updateOrderSummary();
+                hideLoading();
+            }).catch(function (err) {
+                if (error.response && error.response.status === 403) {
+                    showError(null, NO_PERMISSION_ERR_MSG);
+                    return;
+                }
+                showError();
+            })
+        }
+
+        // Toggle product selection
+        function toggleProduct(productId) {
+            const card = document.getElementById(`card-${productId}`);
+            const qtyInput = document.getElementById(`qty-${productId}`);
+
+            if (order[productId]) {
+                delete order[productId];
+                qtyInput.value = 0;
+                card.classList.remove('selected');
+            } else {
+                order[productId] = 1;
+                qtyInput.value = 1;
+                card.classList.add('selected');
+            }
+
+            updateOrderSummary();
+        }
+
+        // Change quantity by increment
+        function changeQuantity(productId, delta) {
+            const currentQty = order[productId] || 0;
+            const newQty = Math.max(0, currentQty + delta);
+
+            if (newQty === 0) {
+                delete order[productId];
+                document.getElementById(`card-${productId}`).classList.remove('selected');
+            } else {
+                order[productId] = newQty;
+                document.getElementById(`card-${productId}`).classList.add('selected');
+            }
+
+            document.getElementById(`qty-${productId}`).value = newQty;
+            updateOrderSummary();
+        }
+
+        // Update quantity from input
+        function updateQuantity(productId, value) {
+            const qty = parseInt(value) || 0;
+
+            if (qty === 0) {
+                delete order[productId];
+                document.getElementById(`card-${productId}`).classList.remove('selected');
+            } else {
+                order[productId] = qty;
+                document.getElementById(`card-${productId}`).classList.add('selected');
+            }
+
+            updateOrderSummary();
+        }
+
+        // Update order summary display
+        function updateOrderSummary() {
+            const orderItemsDiv = document.getElementById('orderItems');
+            const totalAmountSpan = document.getElementById('totalAmount');
+
+            const orderItems = Object.keys(order).map(function(id) {
+                const product = productsRows.find(function(p) { return getProductId(p) == id; });
+                const quantity = order[id];
+                const subtotal = getProductUnitPrice(product) * quantity;
+                return {
+                    product,
+                    quantity,
+                    subtotal,
+                };
+            });
+
+            if (orderItems.length === 0) {
+                orderItemsDiv.innerHTML = '<div class="empty-message">No products selected yet</div>';
+                totalAmountSpan.textContent = getNumberDisplayString(0, productUnitPriceColumn?.data);
+                return;
+            }
+
+            orderItemsDiv.innerHTML = orderItems.map(function(item) {
+                return `
+                    <div class="order-item">
+                        <div class="item-details">
+                            <span class="item-qty">${item.quantity}x</span>
+                            <span class="item-name">${getProductName(item.product)}</span>
+                        </div>
+                        <span class="item-price">${getNumberDisplayString(item.subtotal, productUnitPriceColumn?.data)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const total = orderItems.reduce(function(sum, item) { return sum + item.subtotal; }, 0);
+            totalAmountSpan.textContent = `${getNumberDisplayString(total, productUnitPriceColumn?.data)}`;
+        }
+
+        // Clear the entire order
+        function clearOrder() {
+            order = {};
+            productsRows.forEach(function(product) {
+                document.getElementById(`card-${getProductId(product)}`).classList.remove('selected');
+                document.getElementById(`qty-${getProductId(product)}`).value = 0;
+            });
+            updateOrderSummary();
+        }
+
+        function handleSubmitError(error) {
+            const errorTitle = 'Submit order failed';
+            const errorMsg = 'Please check your data source and connection, then try again.';
+            if (error.response && error.response.status === 403) {
+                showError(errorTitle, errorMsg)
+                return;
+            }
+            showError(errorTitle, errorMsg);
+        }
+
+        // Submit the selected order
+        async function submitOrder() {
+            if (!order || Object.keys(order).length === 0) {
+                showEmptyOrderToast();
+                return;
+            }
+            let orderItemsRowsData = [];
+            let linkedProductsRowsData = [];
+            Object.keys(order).forEach(function(productId) {
+                const Quantity = order[productId] || 0;
+                orderItemsRowsData.push({ Quantity });
+                linkedProductsRowsData.push({
+                    link_column_name: 'Product',
+                    other_rows_ids: [productId],
+                });
+            });
+
+            // add order items
+            sdk.batchAddRows({
+                tableName: TABLE_NAME_MAP.ORDER_ITEMS,
+                rowsData: orderItemsRowsData,
+                rowsLinksData: linkedProductsRowsData,
+            }).then(function(res) {
+                const rows = res?.data && res.data.rows;
+                const orderItemsRowsIds = Array.isArray(rows) ? rows.map(function (row) { return row._id; }).filter(Boolean) : [];
+                if (orderItemsRowsIds.length > 0) {
+                    // add order
+                    sdk.addRow({
+                        tableName: TABLE_NAME_MAP.ORDERS,
+                        rowData: {},
+                        rowLinksData: [{ link_column_name: 'Order_items', other_rows_ids: orderItemsRowsIds }],
+                    }).then(function (res) {
+                        showSuccess();
+                    }).catch(function (error) {
+                        handleSubmitError(error);
+                    });
+                }
+            }).catch(function (error) {
+                handleSubmitError(error);
+            });
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
