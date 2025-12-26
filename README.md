@@ -45,3 +45,5 @@ Required fields:
 ```bash
 node node scripts/build-page.js
 ```
+
+3. The page is built in `page-zip` directory
