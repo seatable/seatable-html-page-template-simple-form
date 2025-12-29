@@ -1,11 +1,7 @@
-const JSZip = require('./jszip.min');
-const fs = require('fs');
-const path = require('path');
-const process = require('process');
-
-// rm -rf page-zip && mkdir page-zip
-fs.rmSync('page-zip', { recursive: true, force: true });
-fs.mkdirSync('page-zip', { recursive: true });
+import JSZip from 'jszip';
+import fs from 'fs';
+import path from 'path';
+import process from 'process';
 
 /**
  * Get file content
@@ -45,7 +41,7 @@ const zip = new JSZip();
 addFilesToZip(buildPath, zip);
 
 // page info
-const pageInfoContent = JSON.parse(getFileContent('info.json'));
+const pageInfoContent = JSON.parse(getFileContent('package.json'));
 
 zip.generateAsync({ type: 'nodebuffer' }).then(function (content) {
   let zip = `${pageInfoContent.name}-${pageInfoContent.version}.zip`;

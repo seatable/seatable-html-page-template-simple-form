@@ -36,9 +36,30 @@ Required fields:
 | ----------- | ---- | ------------------- |
 | Order_items | link | link to Order_items |
 
+## Development
+
+1. Install dependencies
+
+2. Add `/src/setting.local.js` (optional)
+
+```js
+export default {
+  server: "",
+  appUuid: "",
+  accessToken: "",
+  pageId: "", // create an html page in universal app first
+};
+```
+
+3. Run the following command to start the development server
+
+```bash
+npm run dev
+```
+
 ## Build page
 
-1. Update the version in `info.json`
+1. Update the version in `package.json`
 
 2. Run the following command to build the page
 

@@ -608,7 +608,7 @@
             </div>
         </div>
     </div>
-    <script src="https://unpkg.com/seatable-html-page-sdk@0.0.1/dist/index.js"></script>
+    <script src="https://unpkg.com/seatable-html-page-sdk@0.0.2/dist/index.js"></script>
     <script>
         function showLoading() {
             document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -705,7 +705,7 @@
             // formats: old version maybe 'null'
             const { decimal = 'dot', thousands = 'no', precision = 2, enable_precision = false } = formats || {};
             const sNum = number.toFixed(enable_precision ? precision : 8)
-            const { format = DEFAULT_NUMBER_FORMAT } = formats || {};
+            const { format = 'number' } = formats || {};
             switch (format) {
                 case 'yuan': {
                     return `￥${sNum}`;
@@ -751,18 +751,14 @@
             }
         }
 
-
         async function init() {
             showLoading();
-            sdk = new HTMLPageSDK({
-                /**
-                 * local develop settings
-                 * */
-                // server: 'http://127.0.0.1/html-page/',
-                // appUuid: 'def4cb5d-0557-4f3f-b9cc-02626a16dff3',
-                // accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY4OTE5MDgsImFwcF91dWlkIjoiZGVmNGNiNWQtMDU1Ny00ZjNmLWI5Y2MtMDI2MjZhMTZkZmYzIiwidXNlcm5hbWUiOiI3MzAyZDEyZDhlNWQ0NGE1OGUyZWFiMmQ1NTJhYTQyOUBhdXRoLmxvY2FsIiwidXNlcl9yb2xlX25hbWUiOiJhZG1pbiIsInJvbGVfaWQiOjQ2LCJwZXJtaXNzaW9uIjoicnciLCJjdXN0b21fcGVybWlzc2lvbiI6IiJ9.EJKZ6U-xQxL53ukKmNKn2zxOWiBBU0HC4p50zGVSk0M',
-                // pageId: 'bNi0',
-            });
+            let options = null;
+            if (window.__HTML_PAGE_DEV_CONFIG__) {
+                options = window.__HTML_PAGE_DEV_CONFIG__
+                console.log('Local settings:', window.__HTML_PAGE_DEV_CONFIG__);
+            }
+            sdk = new HTMLPageSDK(options);
             await sdk.init()
             sdk.listRows({ tableName: TABLE_NAME_MAP.PRODUCTS }).then(function (res) {
                 const productsColumns = res.data && res.data.metadata ? res.data && res.data.metadata : [];
@@ -776,7 +772,7 @@
                 renderProducts();
                 updateOrderSummary();
                 hideLoading();
-            }).catch(function (err) {
+            }).catch(function (error) {
                 if (error.response && error.response.status === 403) {
                     showError(null, NO_PERMISSION_ERR_MSG);
                     return;
