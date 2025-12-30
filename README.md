@@ -64,7 +64,7 @@ npm run dev
 2. Run the following command to build the page
 
 ```bash
-node node scripts/build-page.js
+npm run build-page
 ```
 
 3. The page is built in `page-zip` directory
