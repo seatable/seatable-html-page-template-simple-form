@@ -1,6 +1,11 @@
-# seatable-html-page-template-simple-form
+# SeaTable HTML page template for building forms
 
-Select products and quantities to calculate your total.
+SeaTable HTML page enable you to upload a custom HTML file and display as a page in SeaTable app.
+
+This repository serves as an example for building a HTML page containing a complex form.
+
+This form let users select products and quantities and calculate a total price before submit the form.
+
 
 ## Required tables
 
