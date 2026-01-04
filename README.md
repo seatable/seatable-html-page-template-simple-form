@@ -2,9 +2,9 @@
 
 SeaTable HTML page enable you to upload a custom HTML file and display as a page in SeaTable app.
 
-This repository serves as an example for building a HTML page containing a complex form.
+This repository serves as an example of how to create an HTML page featuring a complex form. Traditional forms created through web interfaces are limited in their ability to incorporate complex logic. By building a form from the ground up using HTML and JavaScript, you can achieve greater flexibility.
 
-This form let users select products and quantities and calculate a total price before submit the form.
+This example shows a form that let users select products and quantities and calculate a total price before submit.
 
 
 ## Required tables
