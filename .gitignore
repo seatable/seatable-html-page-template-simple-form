@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 page-zip
-/src/setting.local.js
+/src/setting.js

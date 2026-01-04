@@ -664,7 +664,7 @@
         const MISSING_REQUIRED_FIELDS_ERR_MSG = 'Missing required fields';
         const TABLE_NAME_MAP = {
             PRODUCTS: 'Products',
-            ORDER_ITEMS: 'Order_items',
+            ORDER_ITEMS: 'OrderItems',
             ORDERS: 'Orders',
         };
         let sdk = null;
@@ -763,8 +763,8 @@
             sdk.listRows({ tableName: TABLE_NAME_MAP.PRODUCTS }).then(function (res) {
                 const productsColumns = res.data && res.data.metadata ? res.data && res.data.metadata : [];
                 productsRows = res.data && res.data.results ? res.data && res.data.results : [];
-                productNameColumn = getColumnByName('Product_name', productsColumns);
-                productUnitPriceColumn =getColumnByName('Unit_price', productsColumns);
+                productNameColumn = getColumnByName('product_name', productsColumns);
+                productUnitPriceColumn =getColumnByName('unit_price', productsColumns);
                 if (!productNameColumn || !productUnitPriceColumn) {
                     showError(null, MISSING_REQUIRED_FIELDS_ERR_MSG);
                     return;
@@ -898,10 +898,10 @@
             let orderItemsRowsData = [];
             let linkedProductsRowsData = [];
             Object.keys(order).forEach(function(productId) {
-                const Quantity = order[productId] || 0;
-                orderItemsRowsData.push({ Quantity });
+                const quantity = order[productId] || 0;
+                orderItemsRowsData.push({ quantity });
                 linkedProductsRowsData.push({
-                    link_column_name: 'Product',
+                    link_column_name: 'product',
                     other_rows_ids: [productId],
                 });
             });
@@ -919,7 +919,7 @@
                     sdk.addRow({
                         tableName: TABLE_NAME_MAP.ORDERS,
                         rowData: {},
-                        rowLinksData: [{ link_column_name: 'Order_items', other_rows_ids: orderItemsRowsIds }],
+                        rowLinksData: [{ link_column_name: 'order_items', other_rows_ids: orderItemsRowsIds }],
                     }).then(function (res) {
                         showSuccess();
                     }).catch(function (error) {

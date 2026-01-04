@@ -1,8 +1,6 @@
-const config = {
+export default {
   server: '',
   appUuid: '',
-  accessToken: '',
   pageId: '', // create an html page in universal app first
+  APIToken: '', // generate API token from Base
 };
-
-export default config;
