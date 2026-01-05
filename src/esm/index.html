@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Order Calculator</title>
+    <link rel="stylesheet" href="./media/dtable-font.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    <div class="error-overlay" id="errorOverlay">
+        <div class="error-modal">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title" id="errorTitle">Loading Failed</div>
+            <div class="error-message" id="errorMessage">Load Products failed. Please check your connection and try again.</div>
+            <div class="error-buttons">
+                <button class="error-btn primary" onclick="retryLoading()">Retry</button>
+                <button class="error-btn secondary" onclick="closeError()">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-content">
+            <div class="success-icon-wrapper">
+                <div class="success-icon">
+                    <div class="success-checkmark">
+                        <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+                            <path class="checkmark-path" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M14 27l8 8 16-16"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="success-message">Your order has been submitted!</div>
+            <button class="success-btn" onclick="orderAgain()">Order again</button>
+        </div>
+    </div>
+    <div class="empty-order-toast" id="emptyOrderToast">Please select products first!</div>
+    <div class="container" id="mainContainer">
+        <h1>🛍️ Product Order Calculator</h1>
+        <p class="subtitle">Select products and quantities to calculate your total</p>
+
+        <div class="product-section">
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+
+        <div class="order-summary">
+            <div class="summary-title">Order summary</div>
+            <div id="orderItems"></div>
+            <div class="total-section">
+                <span class="total-label">Total:</span>
+                <span class="total-amount" id="totalAmount"></span>
+            </div>
+            <div class="order-actions">
+                <button class="btn secondary" onclick="clearOrder()">Clear order</button>
+                <button class="btn primary" onclick="submitOrder()">Submit order</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./index.js"></script>
+</body>
+</html>

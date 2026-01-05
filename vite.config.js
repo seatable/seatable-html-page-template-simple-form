@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
-import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import path, { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import process from 'process';
 import eslint from 'vite-plugin-eslint';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,13 +39,13 @@ export default defineConfig(async ({ mode }) => {
   if (isDev) {
     devConfigs = await loadLocalSettings();
   }
-
+  const env = loadEnv(mode, process.cwd(), '');
   return {
     base: './',
-    root: './src',
-    publicDir: '../public',
+    root: env.ESM === 'true' ? './src/esm' : './src/classic',
+    publicDir: resolve(__dirname, 'public'),
     build: {
-      outDir: '../dist',
+      outDir: resolve(__dirname, 'dist'),
       emptyOutDir: true,
       rollupOptions: {
         output: {
