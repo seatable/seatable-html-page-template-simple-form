@@ -17,14 +17,15 @@ const getTimestamp = () => {
 };
 
 const loadLocalSettings = async () => {
+  const settingPath = path.resolve(__dirname, './src/setting.js');
   try {
-    await fs.promises.access(path.resolve(__dirname, './src/setting.js'));
+    await fs.promises.access(settingPath);
   } catch (e) {
     console.log(`${getTimestamp()} \x1b[33m[vite]\x1b[0m No local settings file is applied.`);
     return null;
   }
   try {
-    const configModule = await import('./src/setting.js');
+    const configModule = await import(settingPath);
     return Object.values(configModule)[0];
   } catch (e) {
     console.log(`${getTimestamp()} \x1b[33m[vite]\x1b[0m Load local settings file failed.`);
