@@ -5,7 +5,11 @@ import fs from 'fs';
 import process from 'process';
 import eslint from 'vite-plugin-eslint';
 
+const VITE_BADGE = '\x1b[33m[vite]\x1b[0m';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const settingPath = path.resolve(__dirname, './src/setting.js');
 
 const getTimestamp = () => {
   return new Date().toLocaleTimeString('en-US', {
@@ -17,7 +21,6 @@ const getTimestamp = () => {
 };
 
 const loadLocalSettings = async () => {
-  const settingPath = path.resolve(__dirname, './src/setting.js');
   try {
     await fs.promises.access(settingPath);
   } catch (e) {
@@ -25,10 +28,10 @@ const loadLocalSettings = async () => {
     return null;
   }
   try {
-    const configModule = await import(settingPath);
+    const configModule = await import(`${settingPath}?t=${Date.now()}`);
     return Object.values(configModule)[0];
   } catch (e) {
-    console.log(`${getTimestamp()} \x1b[33m[vite]\x1b[0m Load local settings file failed.`);
+    console.log(`${getTimestamp()} ${VITE_BADGE} Load local settings file failed.`);
     return null;
   }
 };
@@ -36,10 +39,6 @@ const loadLocalSettings = async () => {
 // https://vite.dev/config/
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development';
-  let devConfigs = null;
-  if (isDev) {
-    devConfigs = await loadLocalSettings();
-  }
   const env = loadEnv(mode, process.cwd(), '');
   return {
     base: './',
@@ -71,9 +70,23 @@ export default defineConfig(async ({ mode }) => {
       chunkSizeWarningLimit: 1000,
     },
     plugins: [
-      {
+      isDev && {
         name: 'inject-html',
-        transformIndexHtml(html) {
+        configureServer(server) {
+          server.watcher.add(settingPath);
+        },
+        handleHotUpdate({ file, server }) {
+          if (file === settingPath) {
+            console.log(`${getTimestamp()} ${VITE_BADGE} setting.js changed, reloading page...`);
+            server.ws.send({
+              type: 'full-reload',
+              path: '*'
+            });
+            return [];
+          }
+        },
+        async transformIndexHtml(html) {
+          const devConfigs = await loadLocalSettings();
           return {
             html,
             tags: [
@@ -96,7 +109,7 @@ export default defineConfig(async ({ mode }) => {
         failOnError: false,
         include: ['src/**/*.{js,ts,vue,jsx,tsx}'],
       }),
-    ],
+    ].filter(Boolean),
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
