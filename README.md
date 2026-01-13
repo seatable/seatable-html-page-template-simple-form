@@ -6,7 +6,6 @@ This repository serves as an example of how to create an HTML page featuring a c
 
 This example shows a form that let users select products and quantities and calculate a total price before submit.
 
-
 ## Required tables
 
 ### Products
@@ -45,13 +44,13 @@ Required fields:
 
 1. Install dependencies
 
-2. Add `/src/setting.local.js` (optional)
+2. Add `/src/setting.js` (optional)
 
 ```js
 export default {
   server: "",
   appUuid: "",
-  accessToken: "",
+  accountToken: "",
   pageId: "", // create an html page in universal app first
 };
 ```
