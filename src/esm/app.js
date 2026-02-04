@@ -131,7 +131,8 @@ export default class App {
 
     const orderItems = Object.keys(this.orderModel.getItems());
     const orderItemsData = orderItems.map(productId => ({
-      quantity: this.orderModel.getQuantity(productId)
+      quantity: this.orderModel.getQuantity(productId),
+      product: [productId],
     }));
 
     const linkedProductsData = orderItems.map(productId => ({

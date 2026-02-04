@@ -899,10 +899,9 @@
             let linkedProductsRowsData = [];
             Object.keys(order).forEach(function(productId) {
                 const quantity = order[productId] || 0;
-                orderItemsRowsData.push({ quantity });
-                linkedProductsRowsData.push({
-                    link_column_name: 'product',
-                    other_rows_ids: [productId],
+                orderItemsRowsData.push({
+                    quantity,
+                    product: [productId],
                 });
             });
 
@@ -910,7 +909,6 @@
             sdk.batchAddRows({
                 tableName: TABLE_NAME_MAP.ORDER_ITEMS,
                 rowsData: orderItemsRowsData,
-                rowsLinksData: linkedProductsRowsData,
             }).then(function(res) {
                 const rows = res?.data && res.data.rows;
                 const orderItemsRowsIds = Array.isArray(rows) ? rows.map(function (row) { return row._id; }).filter(Boolean) : [];
@@ -918,8 +916,9 @@
                     // add order
                     sdk.addRow({
                         tableName: TABLE_NAME_MAP.ORDERS,
-                        rowData: {},
-                        rowLinksData: [{ link_column_name: 'order_items', other_rows_ids: orderItemsRowsIds }],
+                        rowData: {
+                            order_items: orderItemsRowsIds,
+                        },
                     }).then(function (res) {
                         showSuccess();
                     }).catch(function (error) {

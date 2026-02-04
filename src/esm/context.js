@@ -29,13 +29,12 @@ export default class Context {
     }
   }
 
-  async submitOrder(orderItemsData, linkedProductsData) {
+  async submitOrder(orderItemsData) {
     try {
       // Add order items
       const itemsRes = await this.sdk.batchAddRows({
         tableName: TABLE_NAME_MAP.ORDER_ITEMS,
         rowsData: orderItemsData,
-        rowsLinksData: linkedProductsData,
       });
 
       const rows = itemsRes?.data?.rows;
@@ -47,11 +46,9 @@ export default class Context {
         // Add order
         await this.sdk.addRow({
           tableName: TABLE_NAME_MAP.ORDERS,
-          rowData: {},
-          rowLinksData: [{
-            link_column_name: 'order_items',
-            other_rows_ids: orderItemsIds
-          }],
+          rowData: {
+            order_items: orderItemsIds,
+          },
         });
         return { success: true };
       }
