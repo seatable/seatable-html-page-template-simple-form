@@ -1,62 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
     <title>Product Order Calculator</title>
 </head>
+
 <body>
-    <div class="loading-overlay" id="loadingOverlay">
+    <div
+        class="loading-overlay"
+        id="loadingOverlay"
+    >
         <div class="spinner"></div>
     </div>
-    <div class="error-overlay" id="errorOverlay">
-        <div class="error-modal">
-            <div class="error-icon">⚠️</div>
-            <div class="error-title" id="errorTitle">Loading Failed</div>
-            <div class="error-message" id="errorMessage">Load Products failed. Please check your connection and try again.</div>
-            <div class="error-buttons">
-                <button class="error-btn primary" onclick="retryLoading()">Retry</button>
-                <button class="error-btn secondary" onclick="closeError()">Close</button>
-            </div>
-        </div>
-    </div>
-    <div class="success-overlay" id="successOverlay">
-        <div class="success-content">
-            <div class="success-icon-wrapper">
-                <div class="success-icon">
-                    <div class="success-checkmark">
-                        <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-                            <path class="checkmark-path" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M14 27l8 8 16-16"/>
-                        </svg>
-                    </div>
+    <div class="page-wrap">
+        <div
+            class="error-overlay"
+            id="errorOverlay"
+        >
+            <div class="error-modal">
+                <div class="error-icon">⚠️</div>
+                <div
+                    class="error-title"
+                    id="errorTitle"
+                >Loading Failed</div>
+                <div
+                    class="error-message"
+                    id="errorMessage"
+                >Load Products failed. Please check your connection and try again.</div>
+                <div class="error-buttons">
+                    <button
+                        class="error-btn primary"
+                        onclick="retryLoading()"
+                    >Retry</button>
+                    <button
+                        class="error-btn secondary"
+                        onclick="closeError()"
+                    >Close</button>
                 </div>
             </div>
-            <div class="success-message">Your order has been submitted!</div>
-            <button class="success-btn" onclick="orderAgain()">Order again</button>
+        </div>
+        <div
+            class="success-overlay"
+            id="successOverlay"
+        >
+            <div class="success-content">
+                <div class="success-icon-wrapper">
+                    <div class="success-icon">
+                        <div class="success-checkmark">
+                            <svg
+                                viewBox="0 0 52 52"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    class="checkmark-path"
+                                    fill="none"
+                                    stroke="white"
+                                    stroke-width="4"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M14 27l8 8 16-16"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="success-message">Your order has been submitted!</div>
+                <button
+                    class="success-btn"
+                    onclick="orderAgain()"
+                >Order again</button>
+            </div>
+        </div>
+        <div class="card">
+
+            <!-- Tabs -->
+            <div class="tab-nav">
+                <button
+                    class="tab-btn active"
+                    id="tabInbound"
+                    onclick="switchTab('inbound')"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                        />
+                        <polyline points="8 12 12 16 16 12" />
+                        <line
+                            x1="12"
+                            y1="8"
+                            x2="12"
+                            y2="16"
+                        />
+                    </svg>
+                    Inbound Management
+                </button>
+                <button
+                    class="tab-btn"
+                    id="tabOutbound"
+                    onclick="switchTab('outbound')"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                        />
+                        <polyline points="16 12 12 8 8 12" />
+                        <line
+                            x1="12"
+                            y1="16"
+                            x2="12"
+                            y2="8"
+                        />
+                    </svg>
+                    Outbound Management
+                </button>
+            </div>
+            <div class="tab-body">
+                <div
+                    class="section-title"
+                    id="formTitle"
+                >New Inbound Order</div>
+                <div class="section-sub">Automatically associate product information through inventory codes</div>
+                <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:14px;">Order Information</div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <rect
+                                x="3"
+                                y="4"
+                                width="18"
+                                height="18"
+                                rx="2"
+                            />
+                            <line
+                                x1="16"
+                                y1="2"
+                                x2="16"
+                                y2="6"
+                            />
+                            <line
+                                x1="8"
+                                y1="2"
+                                x2="8"
+                                y2="6"
+                            />
+                            <line
+                                x1="3"
+                                y1="10"
+                                x2="21"
+                                y2="10"
+                            />
+                        </svg>
+                    </label>
+                    <input
+                        type="date"
+                        class="form-input"
+                        id="orderDate"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle
+                                cx="12"
+                                cy="7"
+                                r="4"
+                            />
+                        </svg>
+                        Applicant <span class="req">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        class="form-input"
+                        id="applicant"
+                        placeholder="Enter applicant name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Order Remarks</label>
+                    <input
+                        type="text"
+                        class="form-input"
+                        id="remarks"
+                        placeholder="Enter order remarks (optional)"
+                    >
+                </div>
+                <div class="hint-box">
+                    <div class="hint-box-title">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                            />
+                        </svg>
+                        Available Inventory Code Examples
+                    </div>
+                    <div
+                        class="hint-chips"
+                        id="inventoryGrid"
+                    >
+                    </div>
+                </div>
+                <div class="products-header">
+                    <h3>Product Details</h3>
+                    <button
+                        class="btn-add"
+                        onclick="addProduct()"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                        >
+                            <line
+                                x1="12"
+                                y1="5"
+                                x2="12"
+                                y2="19"
+                            />
+                            <line
+                                x1="5"
+                                y1="12"
+                                x2="19"
+                                y2="12"
+                            />
+                        </svg>
+                        Add Product
+                    </button>
+                </div>
+
+                <div id="productList"></div>
+                <div class="summary-bar">
+                    <div class="summary-item">Product Types: <span
+                            class="val"
+                            id="sumTypes"
+                        >1</span> types</div>
+                    <div class="summary-item">Total Quantity: <span
+                            class="val"
+                            id="sumQty"
+                        >0</span></div>
+                    <div class="summary-item">Completed: <span
+                            class="val green"
+                            id="sumFilled"
+                        >0</span><span id="sumTotal">/1</span></div>
+                </div>
+
+                <div class="actions">
+                    <button
+                        class="btn-reset"
+                        onclick="resetForm()"
+                    >Reset Form</button>
+                    <button
+                        class="btn-submit"
+                        onclick="submitForm()"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        <span id="submitBtnText">Submit Order</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="empty-order-toast" id="emptyOrderToast">Please select products first!</div>
-    <div class="container" id="mainContainer">
-        <h1>🛍️ Product Order Calculator</h1>
-        <p class="subtitle">Select products and quantities to calculate your total</p>
-
-        <div class="product-section">
-            <div class="product-grid" id="productGrid"></div>
-        </div>
-
-        <div class="order-summary">
-            <div class="summary-title">Order summary</div>
-            <div id="orderItems"></div>
-            <div class="total-section">
-                <span class="total-label">Total:</span>
-                <span class="total-amount" id="totalAmount"></span>
-            </div>
-            <div class="order-actions">
-                <button class="btn secondary" onclick="clearOrder()">Clear order</button>
-                <button class="btn primary" onclick="submitOrder()">Submit order</button>
-            </div>
-        </div>
-    </div>
-    <script type="module" src="./index.js"></script>
+    <script
+        type="module"
+        src="./index.js"
+    ></script>
 </body>
+
 </html>
