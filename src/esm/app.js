@@ -159,8 +159,8 @@ export default class App {
   }
 
   setDefaultDate() {
-    const dateLabel = document.querySelector('label[for="date"]') || document.querySelector('#date')?.closest('.form-group')?.querySelector('.form-label');
-    if (dateLabel) dateLabel.childNodes[dateLabel.childNodes.length - 1].textContent = this.isInbound() ? ' 入库日期 ' : ' 出库日期 ';
+    const dateLabelText = document.getElementById('dateLabelText');
+    if (dateLabelText) dateLabelText.textContent = this.isInbound() ? '入库日期' : '出库日期';
     const dateInput = document.getElementById('date');
     if (!dateInput) return;
 
@@ -380,8 +380,8 @@ export default class App {
     document.getElementById('formTitle').textContent = this.isInbound() ? '新建入库单' : '新建出库单';
     document.getElementById('submitBtnText').textContent = this.isInbound() ? '提交入库单' : '提交出库单';
 
-    const dateLabel = document.querySelector('label[for="date"]') || document.querySelector('#date')?.closest('.form-group')?.querySelector('.form-label');
-    if (dateLabel) dateLabel.childNodes[dateLabel.childNodes.length - 1].textContent = this.isInbound() ? ' 入库日期 ' : ' 出库日期 ';
+    const dateLabelText = document.getElementById('dateLabelText');
+    if (dateLabelText) dateLabelText.textContent = this.isInbound() ? '入库日期' : '出库日期';
     this.products = [];
     this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
     this.refreshDuplicateCodeErrors();

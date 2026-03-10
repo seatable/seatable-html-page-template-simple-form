@@ -18,15 +18,15 @@ export const ERROR_MESSAGES = {
 };
 
 export const FORM_VALIDATION_ERRORS = {
-  DATE_REQUIRED: '请选择日期。',
-  APPLICANT_REQUIRED: '请输入申请人。',
-  INVENTORY_CODE_REQUIRED: '请输入库存编码。',
-  QUANTITY_REQUIRED: '请输入数量。',
-  QUANTITY_INVALID: '数量必须大于0。',
-  OVER_STOCK: '超过关联商品信息的当前库存。',
-  FORM_INVALID: '请先修正表单中的错误。',
-  INVALID_INVENTORY_CODE: '存在无效的库存编码，请检查并重新输入！',
-  DUPLICATE_INVENTORY_CODE: '该商品已在列表中，请勿重复添加。',
+  DATE_REQUIRED: '请选择日期',
+  APPLICANT_REQUIRED: '请输入申请人',
+  INVENTORY_CODE_REQUIRED: '请输入库存编码',
+  QUANTITY_REQUIRED: '请输入数量',
+  QUANTITY_INVALID: '数量必须大于0',
+  OVER_STOCK: '超过关联商品信息的当前库存',
+  FORM_INVALID: '请先修正表单中的错误',
+  INVALID_INVENTORY_CODE: '存在无效的库存编码，请检查并重新输入',
+  DUPLICATE_INVENTORY_CODE: '该商品已在列表中，请勿重复添加',
   REASON_REQUIRED: (reasonLabel) => `请选择${reasonLabel}`,
   REQUIRED_FIELDS: (reasonLabel) => `请完成所有商品的必填字段（库存编码、数量、${reasonLabel}）！`,
 };
