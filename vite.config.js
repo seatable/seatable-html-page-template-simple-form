@@ -40,30 +40,23 @@ const loadLocalSettings = async () => {
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development';
   const env = loadEnv(mode, process.cwd(), '');
+  const devConfigs = await loadLocalSettings();
+  const isAdmin = !isDev ? (process.env.ADMIN === 'true') : (devConfigs?.isAdmin === true);
+  const isEsm = process.env.ESM === 'true' || env.ESM === 'true';
+  const outDirName = isEsm ? (isAdmin ? 'admin' : 'esm') : 'classic';
+  const rootDir = isEsm ? (isAdmin ? './src/admin' : './src/esm') : './src/classic';
   return {
     base: './',
-    root: env.ESM === 'true' ? './src/esm' : './src/classic',
+    root: resolve(__dirname, rootDir),
     publicDir: resolve(__dirname, 'public'),
     build: {
-      outDir: resolve(__dirname, 'dist'),
-      emptyOutDir: true,
+      outDir: resolve(__dirname, `dist/${outDirName}`),
+      emptyOutDir: false,
       rollupOptions: {
         output: {
           entryFileNames: '[name]-[hash].js',
           chunkFileNames: '[name]-[hash].js',
-          assetFileNames: (assetInfo) => {
-            if (assetInfo.names?.[0]?.endsWith('.css')) {
-              return '[name]-[hash][extname]';
-            }
-            return 'assets/[name]-[hash][extname]';
-          },
-          // split vendor chunks if has chunk size warning limit
-          // manualChunks(id) {
-          //   if (id.includes('node_modules')) {
-          //     if (id.includes('react') || id.includes('react-dom')) return 'react';
-          //     return null;
-          //   }
-          // }
+          assetFileNames: '[name]-[hash][extname]',
         },
       },
       assetsInlineLimit: 4 * 1024, // default is 4KB

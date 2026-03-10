@@ -6,7 +6,7 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #F9FAFB;
   min-height: 100vh;
   padding: 20px;
   display: flex;
@@ -303,12 +303,6 @@ body {
   font-size: 1.2em;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 .spinner {
   width: 60px;
   height: 60px;
@@ -324,14 +318,12 @@ body {
   padding: 32px 16px;
 }
 
-/* Card */
 .card {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* Tabs */
 .tab-nav {
   display: flex;
   border-bottom: 1px solid #E5E7EB;

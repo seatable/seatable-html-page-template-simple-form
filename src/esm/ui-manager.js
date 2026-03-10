@@ -51,21 +51,20 @@ export default class UIManager {
     if (!grid) return;
 
     if (inventories.length === 0) {
-      grid.innerHTML = '<div class="empty-message">No inventory</div>';
+      grid.innerHTML = '<div class="empty-message">没有库存</div>';
       return;
     }
 
     grid.innerHTML = inventories.map(inventory => {
-      const inventoryId = inventory._id;
-      const code = inventory.inventoryCode ?? productModel.getInventorySKU(inventory);
-      const name = inventory.name ?? productModel.getInventoryName(inventory);
-      const stock = inventory.currentStock ?? productModel.getCurrentStock(inventory);
+      const inventoryCode = inventory.inventory_code ?? productModel.getInventoryCode(inventory);
+      const productName = inventory.product_name ?? productModel.getInventoryName(inventory);
+      const currentQuantity = inventory.current_quantity ?? productModel.getCurrentQuantity(inventory);
       const unit = inventory.unit ?? productModel.getInventoryUnit(inventory);
       return `
-          <div class="hint-chip" id="card-${inventoryId}">
-            <span class="code">${code}</span>
-            <span class="name">${name}</span>
-            <span class="stock">${stock}</span>
+          <div class="hint-chip" id="card-${inventory._id}">
+            <span class="code">${inventoryCode}</span>
+            <span class="name">${productName}</span>
+            <span class="stock">${currentQuantity}</span>
             <span class="stock">${unit}</span>
           </div>
       `;
@@ -74,17 +73,19 @@ export default class UIManager {
 
   renderProductLists(products, activeTab, updateSummary) {
     const container = document.getElementById('productList');
+    if (!container) return;
     container.innerHTML = '';
     products.forEach((p, idx) => {
       const reasons = activeTab === 'inbound' ? INBOUND_REASONS : OUTBOUND_REASONS;
-      const typeLabel = activeTab === 'inbound' ? 'Inbound' : 'Outbound';
+      const typeLabel = activeTab === 'inbound' ? '入库' : '出库';
       const quantityValue = p.quantity ?? '';
       const quantityNumber = Number(p.quantity);
-      const stockLimitSource = p.baseStock ?? p.currentStock;
+      const stockLimitSource = p.current_quantity;
       const stockNumber = Number(stockLimitSource);
       const hasQuantity = String(p.quantity ?? '').trim() !== '';
       const hasStock = String(stockLimitSource ?? '').trim() !== '' && !Number.isNaN(stockNumber);
-      const isOverStock = hasQuantity && !Number.isNaN(quantityNumber) && hasStock && quantityNumber > stockNumber;
+      const shouldCheckStock = activeTab !== 'inbound';
+      const isOverStock = hasQuantity && !Number.isNaN(quantityNumber) && shouldCheckStock && hasStock && quantityNumber > stockNumber;
 
       const reasonOptions = '<option value="">请选择原因</option>' + reasons.map(r => `<option value="${r.id}"${r.id === p.reason ? ' selected' : ''}>${r.name}</option>`).join('');
       const removeBtn = products.length > 1
@@ -92,15 +93,15 @@ export default class UIManager {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
         </button>` : '';
 
-      const assocPanel = p.name ? `
+      const assocPanel = p.product_name ? `
       <div class="assoc-panel">
-        <h4>✓ Associated product information</h4>
+        <h4>✓ 已关联商品信息</h4>
         <div class="assoc-grid">
-          <div class="assoc-item"><label>Product Name</label><div class="val">${p.name}</div></div>
-          <div class="assoc-item"><label>Specification</label><div class="val">${p.specification}</div></div>
-          <div class="assoc-item"><label>Category</label><div class="val">${p.category}</div></div>
-            <div class="assoc-item"><label>Unit</label><div class="val">${p.unit}</div></div>
-            <div class="assoc-item"><label>Current Stock</label><div class="val stock" id="stock_${p.id}">${p.currentStock !== '' && p.currentStock !== undefined && p.currentStock !== null ? `${p.currentStock}${p.unit ? ' ' + p.unit : ''}` : ''}</div></div>
+          <div class="assoc-item"><label>货品名称</label><div class="val">${p.product_name}</div></div>
+          <div class="assoc-item"><label>货品规格</label><div class="val">${p.specification}</div></div>
+          <div class="assoc-item"><label>货品类别</label><div class="val">${p.product_category}</div></div>
+            <div class="assoc-item"><label>单位</label><div class="val">${p.unit}</div></div>
+            <div class="assoc-item"><label>当前库存</label><div class="val stock" id="stock_${p.id}">${p.current_quantity !== '' && p.current_quantity !== undefined && p.current_quantity !== null ? `${p.current_quantity}${p.unit ? ' ' + p.unit : ''}` : ''}</div></div>
         </div>
       </div>` : '';
       const card = document.createElement('div');
@@ -113,12 +114,12 @@ export default class UIManager {
       <div class="form-group">
         <label class="form-label">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-          Inventory Code <span class="req">*</span>
-          <span class="hint">(Automatically associate product information after entering the code)</span>
+          库存编码 <span class="req">*</span>
+          <span class="hint">(输入库存编码后自动关联商品信息)</span>
         </label>
         <div class="code-row">
-          <input type="text" class="form-input mono" id="code_${p.id}" value="${p.inventoryCode}"
-            placeholder="Enter or scan inventory code, e.g., INV001"
+          <input type="text" class="form-input mono" id="code_${p.id}" value="${p.inventory_code}"
+            placeholder="输入或扫描库存编码，例如：INV001"
             oninput="onCodeInput(${p.id}, this.value)">
           <button class="btn-search" onclick="onCodeInput(${p.id}, document.getElementById('code_${p.id}').value)" title="Search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -128,13 +129,13 @@ export default class UIManager {
       ${assocPanel}
       <div class="grid-3">
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label" id="qtyLabel_${p.id}">${typeLabel} Quantity <span class="req">*</span></label>
+          <label class="form-label" id="qtyLabel_${p.id}">${typeLabel}数量 <span class="req">*</span></label>
           <input type="number" class="form-input${isOverStock ? ' input-error' : ''}" id="qty_${p.id}" value="${quantityValue}"
-            placeholder="Enter quantity" min="1" oninput="onFieldInput(${p.id},'quantity',this.value)">
-          <div class="field-error" id="qty_error_${p.id}" style="${isOverStock ? '' : 'display:none;'}">Exceeded current stock of associated product information</div>
+            placeholder="输入数量" min="1" oninput="onFieldInput(${p.id},'quantity',this.value)">
+          <div class="field-error" id="qty_error_${p.id}" style="${isOverStock ? '' : 'display:none;'}">超过关联商品信息的当前库存</div>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label" id="reasonLabel_${p.id}">${typeLabel} Reason <span class="req">*</span></label>
+          <label class="form-label" id="reasonLabel_${p.id}">${typeLabel}原因 <span class="req">*</span></label>
           <div class="reason-select-wrap">
             <select class="form-select reason-select" id="reason_${p.id}" onchange="onFieldInput(${p.id},'reason',this.value)">
               ${reasonOptions}
@@ -142,9 +143,9 @@ export default class UIManager {
           </div>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Contract Information</label>
-          <input type="text" class="form-input" id="contract_${p.id}" value="${p.contract}"
-            placeholder="Enter contract number or name (optional)" oninput="onFieldInput(${p.id},'contract',this.value)">
+          <label class="form-label">合同信息</label>
+            <input type="text" class="form-input" id="contract_${p.id}" value="${p.contract}"
+              placeholder="输入合同编号或名称（选填）" oninput="onFieldInput(${p.id},'contract',this.value)">
         </div>
       </div>
     `;

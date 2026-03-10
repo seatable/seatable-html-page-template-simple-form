@@ -1,8 +1,7 @@
-import { ERROR_MESSAGES, INBOUND_REASONS, OUTBOUND_REASONS, FORMSTATUS } from './constants';
+import { ERROR_MESSAGES, INBOUND_REASONS, OUTBOUND_REASONS, FORMSTATUS, FORM_VALIDATION_ERRORS } from './constants';
 import Context from './context';
 import InventoryrModel from './model/inventory';
 import UIManager from './ui-manager';
-import { FORM_VALIDATION_ERRORS } from './error';
 
 export default class App {
   constructor() {
@@ -13,11 +12,11 @@ export default class App {
     this.nextId = 1;
     this.products = [this.createEmptyProduct(this.nextId++)];
     this.activeTab = FORMSTATUS.INBOUND;
-    this.baseInventoryData = [];
     this.mockInventoryData = [];
     this.staticFieldListenersBound = false;
     this.validationErrorMode = false;
-
+    this.inboundRecordResults = [];
+    this.outboundRecordResults = [];
     this.bindGlobalEvents();
   }
 
@@ -36,29 +35,28 @@ export default class App {
   }
 
   async init() {
-    this.setDefaultOrderDate();
+    this.setDefaultDate();
     this.uiManager.showLoading();
 
     const options = window.__HTML_PAGE_DEV_CONFIG__ || null;
-    if (options) {
-      console.log('Local settings:', options);
-    }
 
     try {
       await this.context.init(options);
       const result = await this.context.loadProducts();
+      const inboundRecordResults = await this.context.loadInboundRecord();
+      const outboundRecordResults = await this.context.loadOutboundRecord();
+      this.inboundRecordResults = inboundRecordResults;
+      this.outboundRecordResults = outboundRecordResults;
       if (!result.success) {
         this.handleLoadError(result.error, true);
         return;
       }
 
       this.inventoryModel.setInventories(result.rows, result.columns);
-      this.baseInventoryData = this.getMockInventoryData(result);
-      this.recalculateInventoryAvailability();
+      this.mockInventoryData = this.getMockInventoryData(result).map(item => ({ ...item }));
       this.bindStaticFieldListeners();
       this.renderInventoryHints();
       this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
-      this.refreshProductStocksInDom();
       this.refreshDuplicateCodeErrors();
       this.uiManager.hideLoading();
     } catch (error) {
@@ -67,7 +65,7 @@ export default class App {
   }
 
   createEmptyProduct(id) {
-    return { id, inventoryCode: '', name: '', specification: '', category: '', unit: '', currentStock: '', baseStock: '', quantity: '', reason: '', contract: '', };
+    return { id, inventory_code: '', product_name: '', specification: '', product_category: '', unit: '', current_quantity: '', quantity: '', reason: '', contract: '', };
   }
 
   retryLoading(){
@@ -114,94 +112,45 @@ export default class App {
 
   getMockInventoryData(result) {
     const getKey = (name) => result.columns.find(col => col.name === name)?.key;
-    const inventoryCodeKey = getKey('inventoryCode');
-    const nameKey = getKey('productName');
+    const inventoryCodeKey = getKey('inventory_code');
+    const nameKey = getKey('product_name');
     const specificationKey = getKey('specification');
-    const categoryKey = getKey('category');
+    const categoryKey = getKey('product_category');
     const unitKey = getKey('unit');
-    const currentStockKey = getKey('currentStock');
+    const currentQuantityKey = getKey('current_quantity');
 
     return result.rows.map(row => ({
       _id: row._id,
-      inventoryCode: String(row[inventoryCodeKey] || ''),
-      name: Array.isArray(row[nameKey]) ? row[nameKey].join('') : String(row[nameKey] || ''),
+      inventory_code: String(row[inventoryCodeKey] || ''),
+      product_name: Array.isArray(row[nameKey]) ? row[nameKey].join('') : String(row[nameKey] || ''),
       specification: Array.isArray(row[specificationKey]) ? row[specificationKey].join(' ') : String(row[specificationKey] || ''),
-      category: Array.isArray(row[categoryKey]) ? row[categoryKey].join('') : String(row[categoryKey] || ''),
+      product_category: Array.isArray(row[categoryKey]) ? row[categoryKey].join('') : String(row[categoryKey] || ''),
       unit: String(row[unitKey] || ''),
-      currentStock: row[currentStockKey],
+      current_quantity: row[currentQuantityKey],
     }));
-  }
-
-  recalculateInventoryAvailability() {
-    const remainingByCode = new Map();
-    this.baseInventoryData.forEach(item => {
-      const code = String(item.inventoryCode || '').trim().toUpperCase();
-      const stock = Number(item.currentStock);
-      if (!code) return;
-      remainingByCode.set(code, Number.isNaN(stock) ? 0 : stock);
-    });
-
-    this.products.forEach((p) => {
-      const code = String(p.inventoryCode || '').trim().toUpperCase();
-      if (!code || !remainingByCode.has(code)) {
-        p.currentStock = '';
-        return;
-      }
-
-      const availableBefore = remainingByCode.get(code);
-      const qty = Number(p.quantity);
-      const used = Number.isNaN(qty) ? 0 : Math.max(qty, 0);
-      const remainingAfter = Math.max(availableBefore - used, 0);
-      p.currentStock = remainingAfter;
-      remainingByCode.set(code, remainingAfter);
-    });
-
-    this.mockInventoryData = this.baseInventoryData.map(item => {
-      const code = String(item.inventoryCode || '').trim().toUpperCase();
-      if (!remainingByCode.has(code)) {
-        return { ...item };
-      }
-      return {
-        ...item,
-        currentStock: remainingByCode.get(code),
-      };
-    });
   }
 
   renderInventoryHints() {
     this.uiManager.renderInventories(this.mockInventoryData, this.inventoryModel);
   }
 
-  refreshProductStocksInDom() {
-    this.products.forEach(p => {
-      const stockEl = document.getElementById(`stock_${p.id}`);
-      if (!stockEl) return;
-      const parts = [];
-      if (p.currentStock !== '' && p.currentStock !== undefined && p.currentStock !== null) {
-        parts.push(p.currentStock);
-      }
-      if (p.unit) {
-        parts.push(p.unit);
-      }
-      stockEl.textContent = parts.join(' ').trim();
-    });
-  }
-
-  hasDuplicateInventoryCode(code, ignoreId = null) {
+  isDuplicateInventoryCode(code, currentId) {
     const normalized = String(code ?? '').trim().toUpperCase();
     if (!normalized) return false;
-    return this.products.some(product => {
-      if (product.id === ignoreId) return false;
-      const candidate = String(product.inventoryCode || '').trim().toUpperCase();
+    const matches = this.products.filter(product => {
+      const candidate = String(product.inventory_code || '').trim().toUpperCase();
       return candidate && candidate === normalized;
     });
+    if (matches.length <= 1) return false;
+    const firstMatch = matches[0];
+    return currentId !== firstMatch?.id;
   }
 
   refreshDuplicateCodeErrors() {
     this.products.forEach(p => {
       const fieldId = `code_${p.id}`;
       const errorId = `code_error_${p.id}`;
-      if (this.hasDuplicateInventoryCode(p.inventoryCode, p.id)) {
+      if (this.isDuplicateInventoryCode(p.inventory_code, p.id)) {
         this.setFieldValidationError(fieldId, errorId, FORM_VALIDATION_ERRORS.DUPLICATE_INVENTORY_CODE);
       } else {
         this.clearFieldValidationError(fieldId, errorId);
@@ -209,25 +158,22 @@ export default class App {
     });
   }
 
-  setDefaultOrderDate() {
-    const dateLabel = document.querySelector('label[for="orderDate"]') || document.querySelector('#orderDate')?.closest('.form-group')?.querySelector('.form-label');
-    if (dateLabel) dateLabel.childNodes[dateLabel.childNodes.length - 1].textContent = this.isInbound() ? ' Inbound Date ' : ' Outbound Date ';
-    const orderDateInput = document.getElementById('orderDate');
-    if (!orderDateInput) return;
+  setDefaultDate() {
+    const dateLabel = document.querySelector('label[for="date"]') || document.querySelector('#date')?.closest('.form-group')?.querySelector('.form-label');
+    if (dateLabel) dateLabel.childNodes[dateLabel.childNodes.length - 1].textContent = this.isInbound() ? ' 入库日期 ' : ' 出库日期 ';
+    const dateInput = document.getElementById('date');
+    if (!dateInput) return;
 
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    orderDateInput.value = `${year}-${month}-${day}`;
+    dateInput.value = `${year}-${month}-${day}`;
   }
 
   addProduct() {
     this.products.push(this.createEmptyProduct(this.nextId++));
-    this.recalculateInventoryAvailability();
-    this.renderInventoryHints();
     this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
-    this.refreshProductStocksInDom();
     this.refreshDuplicateCodeErrors();
   }
 
@@ -236,10 +182,7 @@ export default class App {
     if (this.products.length === 0) {
       this.products = [this.createEmptyProduct(this.nextId++)];
     }
-    this.recalculateInventoryAvailability();
-    this.renderInventoryHints();
     this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
-    this.refreshProductStocksInDom();
     this.refreshDuplicateCodeErrors();
   }
 
@@ -253,32 +196,32 @@ export default class App {
     const p = this.products.find(x => x.id === id);
     if (!p) return;
 
-    p.inventoryCode = val;
-    const data = this.mockInventoryData.find(item => String(item.inventoryCode).toUpperCase() === val);
+    p.inventory_code = val;
+    const data = this.mockInventoryData.find(item => String(item.inventory_code).toUpperCase() === val);
 
     if (data) {
       Object.assign(p, {
-        name: data.name,
+        product_name: data.product_name,
         specification: data.specification,
-        category: data.category,
+        product_category: data.product_category,
         unit: data.unit,
-        currentStock: data.currentStock,
-        baseStock: data.currentStock,
+        current_quantity: data.current_quantity,
       });
     } else {
-      Object.assign(p, { name: '', specification: '', category: '', unit: '', currentStock: '' });
-      p.baseStock = '';
+      Object.assign(p, { product_name: '', specification: '', product_category: '', unit: '', current_quantity: '' });
     }
 
     p.quantity = document.getElementById(`qty_${id}`)?.value || p.quantity;
     p.reason = document.getElementById(`reason_${id}`)?.value || p.reason;
     p.contract = document.getElementById(`contract_${id}`)?.value || p.contract;
 
-    this.recalculateInventoryAvailability();
-    this.renderInventoryHints();
+    if (val && this.isDuplicateInventoryCode(val, id)) {
+      this.setFieldValidationError(`code_${id}`, `code_error_${id}`, FORM_VALIDATION_ERRORS.DUPLICATE_INVENTORY_CODE);
+    } else {
+      this.clearFieldValidationError(`code_${id}`, `code_error_${id}`);
+    }
+
     this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
-    this.refreshProductStocksInDom();
-    this.clearFieldValidationError(`code_${id}`, `code_error_${id}`);
     this.refreshDuplicateCodeErrors();
     this.validateQuantityField(id);
 
@@ -297,9 +240,6 @@ export default class App {
 
     p[field] = value;
     if (field === 'quantity') {
-      this.recalculateInventoryAvailability();
-      this.renderInventoryHints();
-      this.refreshProductStocksInDom();
       this.validateQuantityField(id);
     } else if (field === 'reason') {
       this.clearFieldValidationError(`reason_${id}`, `reason_error_${id}`);
@@ -310,8 +250,7 @@ export default class App {
 
   orderAgain() {
     this.uiManager.hideSuccess();
-    this.resetForm();
-    this.products = [];
+    this.resetForm(1);
   }
 
   setFieldValidationError(fieldId, errorId, message) {
@@ -348,11 +287,12 @@ export default class App {
     if (!p) return;
 
     const quantityNumber = Number(p.quantity);
-    const stockLimitSource = p.baseStock ?? p.currentStock;
+    const stockLimitSource = p.current_quantity;
     const stockNumber = Number(stockLimitSource);
     const hasQuantity = String(p.quantity ?? '').trim() !== '';
     const hasStock = String(stockLimitSource ?? '').trim() !== '' && !Number.isNaN(stockNumber);
-    const isOverStock = hasQuantity && !Number.isNaN(quantityNumber) && hasStock && quantityNumber > stockNumber;
+    const shouldCheckStock = !this.isInbound() && hasStock;
+    const isOverStock = hasQuantity && !Number.isNaN(quantityNumber) && shouldCheckStock && quantityNumber > stockNumber;
 
     if (isOverStock) {
       this.setFieldValidationError(`qty_${id}`, `qty_error_${id}`, FORM_VALIDATION_ERRORS.OVER_STOCK);
@@ -364,15 +304,15 @@ export default class App {
   validateSubmitFormFields() {
     let isValid = true;
 
-    const orderDate = document.getElementById('orderDate')?.value;
+    const date = document.getElementById('date')?.value;
     const applicant = document.getElementById('applicant')?.value?.trim() || '';
-    const reasonLabel = this.isInbound() ? 'Inbound reason' : 'Outbound reason';
+    const reasonLabel = this.isInbound() ? '入库原因' : '出库原因';
 
-    if (!orderDate) {
+    if (!date) {
       isValid = false;
-      this.setFieldValidationError('orderDate', 'orderDate_error', FORM_VALIDATION_ERRORS.DATE_REQUIRED);
+      this.setFieldValidationError('date', 'date_error', FORM_VALIDATION_ERRORS.DATE_REQUIRED);
     } else {
-      this.clearFieldValidationError('orderDate', 'orderDate_error');
+      this.clearFieldValidationError('date', 'date_error');
     }
 
     if (!applicant) {
@@ -391,7 +331,7 @@ export default class App {
       if (!code) {
         isValid = false;
         this.setFieldValidationError(`code_${p.id}`, `code_error_${p.id}`, FORM_VALIDATION_ERRORS.INVENTORY_CODE_REQUIRED);
-      } else if (this.hasDuplicateInventoryCode(code, p.id)) {
+      } else if (this.isDuplicateInventoryCode(code, p.id)) {
         isValid = false;
         this.setFieldValidationError(`code_${p.id}`, `code_error_${p.id}`, FORM_VALIDATION_ERRORS.DUPLICATE_INVENTORY_CODE);
       } else {
@@ -416,7 +356,7 @@ export default class App {
         this.clearFieldValidationError(`reason_${p.id}`, `reason_error_${p.id}`);
       }
 
-      p.inventoryCode = code;
+      p.inventory_code = code;
       p.quantity = qty;
       p.reason = reason;
 
@@ -437,14 +377,13 @@ export default class App {
     this.activeTab = tab;
     document.getElementById('tabInbound')?.classList.toggle('active', this.isInbound());
     document.getElementById('tabOutbound')?.classList.toggle('active', !this.isInbound());
-    document.getElementById('formTitle').textContent = this.isInbound() ? 'New Inbound Order' : 'New Outbound Order';
-    document.getElementById('submitBtnText').textContent = this.isInbound() ? 'Submit Inbound' : 'Submit Outbound';
+    document.getElementById('formTitle').textContent = this.isInbound() ? '新建入库单' : '新建出库单';
+    document.getElementById('submitBtnText').textContent = this.isInbound() ? '提交入库单' : '提交出库单';
 
-    const dateLabel = document.querySelector('label[for="orderDate"]') || document.querySelector('#orderDate')?.closest('.form-group')?.querySelector('.form-label');
-    if (dateLabel) dateLabel.childNodes[dateLabel.childNodes.length - 1].textContent = this.isInbound() ? ' Inbound Date ' : ' Outbound Date ';
+    const dateLabel = document.querySelector('label[for="date"]') || document.querySelector('#date')?.closest('.form-group')?.querySelector('.form-label');
+    if (dateLabel) dateLabel.childNodes[dateLabel.childNodes.length - 1].textContent = this.isInbound() ? ' 入库日期 ' : ' 出库日期 ';
     this.products = [];
     this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
-    this.refreshProductStocksInDom();
     this.refreshDuplicateCodeErrors();
     this.resetForm();
   }
@@ -457,8 +396,8 @@ export default class App {
 
     const total = this.products.length;
     const sumQty = this.products.reduce((acc, p) => acc + (Number(p.quantity) || 0), 0);
-    const filled = this.products.filter(p => p.inventoryCode && String(p.quantity).trim() && p.reason).length;
-    const types = this.products.filter(p => String(p.inventoryCode || '').trim()).length;
+    const filled = this.products.filter(p => p.inventory_code && String(p.quantity).trim() && p.reason).length;
+    const types = this.products.filter(p => String(p.inventory_code || '').trim()).length;
 
     if (sumTypesEl) sumTypesEl.textContent = String(types);
     if (sumQtyEl) sumQtyEl.textContent = String(sumQty);
@@ -466,36 +405,34 @@ export default class App {
     if (sumTotalEl) sumTotalEl.textContent = `/${total}`;
   }
 
-  resetForm() {
-    const count = this.products.length || 1;
-    this.products = Array.from({ length: count }, () => this.createEmptyProduct(this.nextId++));
+  resetForm(count) {
+    const targetCount = (typeof count === 'number' ? count : this.products.length) || 1;
+    this.products = Array.from({ length: targetCount }, () => this.createEmptyProduct(this.nextId++));
 
     const applicantEl = document.getElementById('applicant');
     const remarksEl = document.getElementById('remarks');
     if (applicantEl) applicantEl.value = '';
     if (remarksEl) remarksEl.value = '';
-    this.setDefaultOrderDate();
-    this.recalculateInventoryAvailability();
+    this.setDefaultDate();
     this.renderInventoryHints();
 
     this.uiManager.renderProductLists(this.products, this.activeTab, this.updateSummary.bind(this));
-    this.refreshProductStocksInDom();
     this.refreshDuplicateCodeErrors();
-    this.clearFieldValidationError('orderDate', 'orderDate_error');
+    this.clearFieldValidationError('date', 'date_error');
     this.clearFieldValidationError('applicant', 'applicant_error');
   }
 
   getFormData() {
     return {
-      orderDate: document.getElementById('orderDate')?.value || '',
+      date: document.getElementById('date')?.value || '',
       applicant: document.getElementById('applicant')?.value?.trim() || '',
-      remarks: document.getElementById('remarks')?.value?.trim() || '',
+      remark: document.getElementById('remarks')?.value?.trim() || '',
       sumQty: this.products.reduce((acc, p) => acc + (Number(p.quantity) || 0), 0),
     };
   }
 
   async submitForm() {
-    const errorTitle = 'Invalid input';
+    const errorTitle = '输入无效';
     if (!this.validateSubmitFormFields()) {
       return this.handleLoadError(null, false, errorTitle, FORM_VALIDATION_ERRORS.FORM_INVALID);
     }
@@ -506,34 +443,51 @@ export default class App {
       p.contract = document.getElementById(`contract_${p.id}`)?.value || '';
     });
 
-    const reasonLabel = this.isInbound() ? 'Inbound reason' : 'Outbound reason';
-    const invalid = this.products.filter(p => !p.inventoryCode || !p.quantity || !p.reason);
+    const reasonLabel = this.isInbound() ? '入库原因' : '出库原因';
+    const invalid = this.products.filter(p => !p.inventory_code || !p.quantity || !p.reason);
     if (invalid.length) {
       return this.handleLoadError(null, false, errorTitle, FORM_VALIDATION_ERRORS.REQUIRED_FIELDS(reasonLabel));
     }
 
-    const badCodes = this.products.filter(p => p.inventoryCode && !p.name);
+    const badCodes = this.products.filter(p => p.inventory_code && !p.product_name);
     if (badCodes.length) {
       return this.handleLoadError(null, false, errorTitle, FORM_VALIDATION_ERRORS.INVALID_INVENTORY_CODE);
     }
 
     const reasons = this.isInbound() ? INBOUND_REASONS : OUTBOUND_REASONS;
     const formData = this.getFormData();
-    console.log('this.products', this.products);
+    const documentNumberPrefix = this.isInbound() ? 'RK' : 'CK';
+    const rows = this.isInbound() ? this.inboundRecordResults.rows : this.outboundRecordResults.rows;
+    const columns = this.isInbound() ? this.inboundRecordResults.columns : this.outboundRecordResults.columns;
+
+    const documentNumberKey = columns.find(col => col.name === 'document_number')?.key;
+    const lastDocumentNumber = rows.length > 0 ? rows[rows.length - 1][documentNumberKey] : null;
+    let nextNumber = 1;
+    let numLength = 4;
+    if (lastDocumentNumber) {
+      const match = lastDocumentNumber.match(/-(\d+)$/);
+      if (match) {
+        const numStr = match[1];
+        nextNumber = parseInt(numStr, 10) + 1;
+        numLength = numStr.length;
+      }
+    }
+    const newDocumentNumber = `${documentNumberPrefix}-${String(nextNumber).padStart(numLength, '0')}`;
     const orderItemsData = this.products.map(product => {
-      const matchedInventory = this.mockInventoryData.find(inv => inv.inventoryCode === product.inventoryCode);
+      const matchedInventory = this.mockInventoryData.find(inv => inv.inventory_code === product.inventory_code);
       const productCopy = {
         contract: product.contract,
-        orderDate: formData.orderDate,
+        date: formData.date,
         applicant: formData.applicant,
-        remarks: formData.remarks,
-        inventoryCode: matchedInventory?._id ? [matchedInventory._id] : [],
+        remark: formData.remark,
+        inventory_code: matchedInventory?._id ? [matchedInventory._id] : [],
         quantity: Number(product.quantity) || 0,
+        document_number: newDocumentNumber,
       };
       if (this.isInbound()) {
-        productCopy.inboundReason = reasons.find(r => r.id === product.reason)?.name || '';
+        productCopy.inbound_reason = reasons.find(r => r.id === product.reason)?.name || '';
       } else {
-        productCopy.outboundReason = reasons.find(r => r.id === product.reason)?.name || '';
+        productCopy.outbound_reason = reasons.find(r => r.id === product.reason)?.name || '';
       }
       return productCopy;
     });

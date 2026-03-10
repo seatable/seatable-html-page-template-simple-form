@@ -27,20 +27,20 @@
                 <div
                     class="error-title"
                     id="errorTitle"
-                >Loading Failed</div>
+                >加载失败</div>
                 <div
                     class="error-message"
                     id="errorMessage"
-                >Load Products failed. Please check your connection and try again.</div>
+                >加载商品失败，请检查您的网络连接，然后再试一次。</div>
                 <div class="error-buttons">
                     <button
                         class="error-btn primary"
                         onclick="retryLoading()"
-                    >Retry</button>
+                    >重试</button>
                     <button
                         class="error-btn secondary"
                         onclick="closeError()"
-                    >Close</button>
+                    >关闭</button>
                 </div>
             </div>
         </div>
@@ -69,16 +69,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="success-message">Your order has been submitted!</div>
+                <div class="success-message">表单已提交！</div>
                 <button
                     class="success-btn"
                     onclick="orderAgain()"
-                >Order again</button>
+                >再次填写表单</button>
             </div>
         </div>
         <div class="card">
-
-            <!-- Tabs -->
             <div class="tab-nav">
                 <button
                     class="tab-btn active"
@@ -104,7 +102,7 @@
                             y2="16"
                         />
                     </svg>
-                    Inbound Management
+                    入库管理
                 </button>
                 <button
                     class="tab-btn"
@@ -130,16 +128,16 @@
                             y2="8"
                         />
                     </svg>
-                    Outbound Management
+                    出库管理
                 </button>
             </div>
             <div class="tab-body">
                 <div
                     class="section-title"
                     id="formTitle"
-                >New Inbound Order</div>
-                <div class="section-sub">Automatically associate product information through inventory codes</div>
-                <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:14px;">Order Information</div>
+                >新建入库单</div>
+                <div class="section-sub">通过库存编码自动关联商品信息</div>
+                <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:14px;">单据信息</div>
 
                 <div class="form-group">
                     <label class="form-label">
@@ -179,7 +177,7 @@
                     <input
                         type="date"
                         class="form-input"
-                        id="orderDate"
+                        id="date"
                     >
                 </div>
 
@@ -198,23 +196,23 @@
                                 r="4"
                             />
                         </svg>
-                        Applicant <span class="req">*</span>
+                        申请人 <span class="req">*</span>
                     </label>
                     <input
                         type="text"
                         class="form-input"
                         id="applicant"
-                        placeholder="Enter applicant name"
+                        placeholder="输入申请人姓名"
                     >
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Order Remarks</label>
+                    <label class="form-label">单据备注</label>
                     <input
                         type="text"
                         class="form-input"
                         id="remarks"
-                        placeholder="Enter order remarks (optional)"
+                        placeholder="输入单据备注信息（选填）"
                     >
                 </div>
                 <div class="hint-box">
@@ -229,7 +227,7 @@
                                 d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
                             />
                         </svg>
-                        Available Inventory Code Examples
+                        可用库存编码示例
                     </div>
                     <div
                         class="hint-chips"
@@ -238,7 +236,7 @@
                     </div>
                 </div>
                 <div class="products-header">
-                    <h3>Product Details</h3>
+                    <h3>商品明细</h3>
                     <button
                         class="btn-add"
                         onclick="addProduct()"
@@ -262,21 +260,21 @@
                                 y2="12"
                             />
                         </svg>
-                        Add Product
+                        添加商品
                     </button>
                 </div>
 
                 <div id="productList"></div>
                 <div class="summary-bar">
-                    <div class="summary-item">Product Types: <span
+                    <div class="summary-item">商品类型: <span
                             class="val"
                             id="sumTypes"
-                        >1</span> types</div>
-                    <div class="summary-item">Total Quantity: <span
+                        >1</span> 种</div>
+                    <div class="summary-item">总数量: <span
                             class="val"
                             id="sumQty"
                         >0</span></div>
-                    <div class="summary-item">Completed: <span
+                    <div class="summary-item">已完成: <span
                             class="val green"
                             id="sumFilled"
                         >0</span><span id="sumTotal">/1</span></div>
@@ -286,7 +284,7 @@
                     <button
                         class="btn-reset"
                         onclick="resetForm()"
-                    >Reset Form</button>
+                    >重置表单</button>
                     <button
                         class="btn-submit"
                         onclick="submitForm()"
@@ -301,7 +299,7 @@
                             <polyline points="17 21 17 13 7 13 7 21" />
                             <polyline points="7 3 7 8 15 8" />
                         </svg>
-                        <span id="submitBtnText">Submit Order</span>
+                        <span id="submitBtnText">提交入库单</span>
                     </button>
                 </div>
             </div>
