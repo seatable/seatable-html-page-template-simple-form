@@ -17,7 +17,8 @@ const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 const pageZipPath = resolveApp('page-zip');
 
-function addFilesToZip(currentPath, zipFolder) {
+const addFilesToZip = (currentPath, zipFolder) => {
+  if (!fs.existsSync(currentPath)) return;
   const files = fs.readdirSync(currentPath);
 
   files.forEach(file => {
@@ -25,32 +26,32 @@ function addFilesToZip(currentPath, zipFolder) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
-      // add subs
       const subFolder = zipFolder.folder(file);
       addFilesToZip(filePath, subFolder);
     } else {
-      // add file
       const fileData = fs.readFileSync(filePath);
       zipFolder.file(file, fileData);
     }
   });
-}
+};
 
-const buildPath = resolveApp('dist');
-const zip = new JSZip();
-addFilesToZip(buildPath, zip);
-
-// page info
-const pageInfoContent = JSON.parse(getFileContent('package.json'));
-
-zip.generateAsync({ type: 'nodebuffer' }).then(function (content) {
-  let zip = `${pageInfoContent.name}-${pageInfoContent.version}.zip`;
-  fs.writeFile(pageZipPath + '/' + zip, content, function (err) {
-    if (err) {
-      console.log('Create' + zip + ' failed');
-      console.log(err);
-      return;
-    }
-    console.log('Create' + zip + ' successful');
+const createZip = (sourceDir, zipName) => {
+  const zip = new JSZip();
+  addFilesToZip(sourceDir, zip);
+  zip.generateAsync({ type: 'nodebuffer' }).then((content) => {
+    fs.writeFile(path.join(pageZipPath, zipName), content, (err) => {
+      if (err) {
+        console.log(`Create ${zipName} failed`);
+        console.log(err);
+      } else {
+        console.log(`Create ${zipName} successful`);
+      }
+    });
   });
-});
+};
+
+const pageInfoContent = JSON.parse(getFileContent('package.json'));
+const baseName = `${pageInfoContent.name}-${pageInfoContent.version}`;
+
+createZip(resolveApp('dist/esm'), `${baseName}-user.zip`);
+createZip(resolveApp('dist/admin'), `${baseName}-admin.zip`);

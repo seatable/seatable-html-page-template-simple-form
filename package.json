@@ -6,9 +6,11 @@
   "description": "Select products and quantities to calculate your total.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:esm": "ESM=true ADMIN=false vite build",
+    "build:admin": "ESM=true ADMIN=true vite build",
+    "build": "npm run build:esm && npm run build:admin",
     "lint": "eslint .",
-    "clean": "rm -rf page-zip && mkdir page-zip",
+    "clean": "rm -rf page-zip dist && mkdir page-zip",
     "build-page": "npm run clean && npm run build && node scripts/build-page.js"
   },
   "repository": {
@@ -37,6 +39,7 @@
     ]
   },
   "dependencies": {
+    "dayjs": "^1.11.19",
     "seatable-html-page-sdk": "^0.0.9"
   },
   "devDependencies": {

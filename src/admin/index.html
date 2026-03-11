@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>Product Order Calculator</title>
+</head>
+
+<body>
+  <div
+    class="loading-overlay"
+    id="loadingOverlay"
+  >
+    <div class="spinner"></div>
+  </div>
+  <div class="page-wrap">
+    <div
+      class="error-overlay"
+      id="errorOverlay"
+    >
+      <div class="error-modal">
+        <div class="error-icon">⚠️</div>
+        <div
+          class="error-title"
+          id="errorTitle"
+        >加载失败</div>
+        <div
+          class="error-message"
+          id="errorMessage"
+        >加载失败，请检查您的网络连接，然后再试一次。</div>
+        <div class="error-buttons">
+          <button
+            class="error-btn primary"
+            onclick="retryLoading()"
+          >重试</button>
+          <button
+            class="error-btn secondary"
+            onclick="closeError()"
+          >关闭</button>
+        </div>
+      </div>
+    </div>
+    <div
+      class="success-overlay"
+      id="successOverlay"
+    >
+      <div class="success-content">
+        <div class="success-icon-wrapper">
+          <div class="success-icon">
+            <div class="success-checkmark">
+              <svg
+                viewBox="0 0 52 52"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  class="checkmark-path"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M14 27l8 8 16-16"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="success-message">表单已提交!</div>
+        <button
+          class="success-btn"
+          onclick="orderAgain()"
+        >再次填写表单</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="page-title">
+        <div class="title-bar"></div>
+        <div>
+          <h1>出入库审批管理</h1>
+          <p>审批待处理的出入库单据，通过后库存自动更新</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div
+          class="stat-card"
+          style="border-left-color:#f59e0b"
+          onclick="switchTab('pending')"
+        >
+          <div
+            class="stat-icon"
+            style="background:#fef3c7;color:#d97706"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">待审批单据</div>
+            <div
+              class="stat-value"
+              id="stat-pending"
+            >3</div>
+          </div>
+        </div>
+        <div
+          class="stat-card"
+          style="border-left-color:#22c55e"
+          onclick="switchTab('in')"
+        >
+          <div
+            class="stat-icon"
+            style="background:#dcfce7;color:#16a34a"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path d="M8 12l4 4 4-4M12 8v8" />
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">入库单</div>
+            <div
+              class="stat-value"
+              id="stat-in"
+            >2</div>
+          </div>
+        </div>
+        <div
+          class="stat-card"
+          style="border-left-color:#f97316"
+          onclick="switchTab('out')"
+        >
+          <div
+            class="stat-icon"
+            style="background:#ffedd5;color:#ea580c"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path d="M16 12l-4-4-4 4M12 16V8" />
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">出库单</div>
+            <div
+              class="stat-value"
+              id="stat-out"
+            >1</div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="orders"
+        id="orders-list"
+      >
+      </div>
+      <div
+        class="empty-state"
+        id="empty-state"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line
+            x1="16"
+            y1="13"
+            x2="8"
+            y2="13"
+          />
+          <line
+            x1="16"
+            y1="17"
+            x2="8"
+            y2="17"
+          />
+        </svg>
+        <h3>暂无待审批单据</h3>
+        <p>当前没有需要审批的出入库单据</p>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+  <script
+    type="module"
+    src="./index.js"
+  ></script>
+</body>
+
+</html>
