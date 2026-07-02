@@ -40,6 +40,7 @@ const loadLocalSettings = async () => {
 export default defineConfig(async ({ mode }) => {
   const isDev = mode === 'development';
   const env = loadEnv(mode, process.cwd(), '');
+  Object.assign(process.env, env);
   return {
     base: './',
     root: env.ESM === 'true' ? './src/esm' : './src/classic',
@@ -110,6 +111,15 @@ export default defineConfig(async ({ mode }) => {
         include: ['src/**/*.{js,ts,vue,jsx,tsx}'],
       }),
     ].filter(Boolean),
+    server: {
+      port: parseInt(process.env.VITE_DEV_PORT),
+      proxy: {
+        [process.env.PROXY_PATH]: {
+          target: process.env.PROXY_TARGET,
+          changeOrigin: true,
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),

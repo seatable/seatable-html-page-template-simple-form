@@ -48,14 +48,16 @@ Required fields:
 
 ```js
 export default {
-  server: "",
+  server: `http://localhost:${process.env.VITE_DEV_PORT}${(process.env.PROXY_PATH || "").replace(/\/+$/, "")}/`,
   appUuid: "",
   accountToken: "",
   pageId: "", // create an html page in universal app first
 };
 ```
 
-3. Run the following command to start the development server
+3. Add `.env.local` (optional)
+
+4. Run the following command to start the development server
 
 ```bash
 npm run dev
