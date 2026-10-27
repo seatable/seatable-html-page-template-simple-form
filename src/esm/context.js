@@ -47,7 +47,7 @@ export default class Context {
         await this.sdk.addRow({
           tableName: TABLE_NAME_MAP.ORDERS,
           rowData: {
-            order_items: orderItemsIds,
+            OrderItems: orderItemsIds,
           },
         });
         return { success: true };
