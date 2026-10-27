@@ -131,12 +131,12 @@ export default class App {
 
     const orderItems = Object.keys(this.orderModel.getItems());
     const orderItemsData = orderItems.map(productId => ({
-      quantity: this.orderModel.getQuantity(productId),
-      product: [productId],
+      Quantity: this.orderModel.getQuantity(productId),
+      Product: [productId],
     }));
 
     const linkedProductsData = orderItems.map(productId => ({
-      link_column_name: 'product',
+      link_column_name: 'Product',
       other_rows_ids: [productId],
     }));
 

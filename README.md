@@ -19,9 +19,9 @@ Required fields:
 | Product_name | text   | product name       |
 | Unit_price   | number | product unit price |
 
-### Order_items
+### OrderItems
 
-Table name: Order_items
+Table name: OrderItems
 
 Required fields:
 
@@ -36,9 +36,9 @@ Table name: Orders
 
 Required fields:
 
-| Name        | Type | Description         |
-| ----------- | ---- | ------------------- |
-| Order_items | link | link to Order_items |
+| Name       | Type | Description        |
+| ---------- | ---- | ------------------ |
+| OrderItems | link | link to OrderItems |
 
 ## Development
 

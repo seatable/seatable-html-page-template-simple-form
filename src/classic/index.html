@@ -608,7 +608,7 @@
             </div>
         </div>
     </div>
-    <script src="https://unpkg.com/seatable-html-page-sdk@latest/dist/index.min.js"></script>
+    <script src="https://unpkg.com/seatable-html-page-sdk@0.0.13/dist/index.min.js"></script>
     <script>
         function showLoading() {
             document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -763,8 +763,8 @@
             sdk.listRows({ tableName: TABLE_NAME_MAP.PRODUCTS }).then(function (res) {
                 const productsColumns = res.data && res.data.metadata ? res.data && res.data.metadata : [];
                 productsRows = res.data && res.data.results ? res.data && res.data.results : [];
-                productNameColumn = getColumnByName('product_name', productsColumns);
-                productUnitPriceColumn =getColumnByName('unit_price', productsColumns);
+                productNameColumn = getColumnByName('Product_name', productsColumns);
+                productUnitPriceColumn =getColumnByName('Unit_price', productsColumns);
                 if (!productNameColumn || !productUnitPriceColumn) {
                     showError(null, MISSING_REQUIRED_FIELDS_ERR_MSG);
                     return;
@@ -900,8 +900,8 @@
             Object.keys(order).forEach(function(productId) {
                 const quantity = order[productId] || 0;
                 orderItemsRowsData.push({
-                    quantity,
-                    product: [productId],
+                    Quantity: quantity,
+                    Product: [productId],
                 });
             });
 
@@ -917,7 +917,7 @@
                     sdk.addRow({
                         tableName: TABLE_NAME_MAP.ORDERS,
                         rowData: {
-                            order_items: orderItemsRowsIds,
+                            OrderItems: orderItemsRowsIds,
                         },
                     }).then(function (res) {
                         showSuccess();
