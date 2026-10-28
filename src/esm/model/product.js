@@ -9,8 +9,8 @@ export default class ProductModel {
 
   setProducts(products, columns) {
     this.products = products;
-    this.nameColumn = getColumnByName('Product_name', columns);
-    this.priceColumn = getColumnByName('Unit_price', columns);
+    this.nameColumn = getColumnByName('ProductName', columns);
+    this.priceColumn = getColumnByName('UnitPrice', columns);
   }
 
   getProducts() {

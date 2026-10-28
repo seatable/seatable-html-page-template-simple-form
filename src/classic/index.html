@@ -763,8 +763,8 @@
             sdk.listRows({ tableName: TABLE_NAME_MAP.PRODUCTS }).then(function (res) {
                 const productsColumns = res.data && res.data.metadata ? res.data && res.data.metadata : [];
                 productsRows = res.data && res.data.results ? res.data && res.data.results : [];
-                productNameColumn = getColumnByName('Product_name', productsColumns);
-                productUnitPriceColumn =getColumnByName('Unit_price', productsColumns);
+                productNameColumn = getColumnByName('ProductName', productsColumns);
+                productUnitPriceColumn =getColumnByName('UnitPrice', productsColumns);
                 if (!productNameColumn || !productUnitPriceColumn) {
                     showError(null, MISSING_REQUIRED_FIELDS_ERR_MSG);
                     return;

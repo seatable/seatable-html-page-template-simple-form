@@ -16,8 +16,8 @@ Required fields:
 
 | Name         | Type   | Description        |
 | ------------ | ------ | ------------------ |
-| Product_name | text   | product name       |
-| Unit_price   | number | product unit price |
+| ProductName | text   | product name       |
+| UnitPrice   | number | product unit price |
 
 ### OrderItems
 
